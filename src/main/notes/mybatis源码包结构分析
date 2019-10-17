@@ -1,0 +1,26 @@
+包名	             说明
+annotation	     自定义注解 ,只有标识作用
+binding	         mapper相关,MapperProxy,根据Mapper接口实现CRUD功能的。
+buider	         构建，xml,annotation会根据配置文件解析
+cache	         缓存,实现了装饰器模式，impl使用了Map实现缓存功能
+cursor           游标
+datasource	     数据源，pooled、unpooled、jndi      (已看完，mybatis是通过该包下的类来获取具有操作数据库能的Connection对象的)
+exception	     异常定义
+executor	     执行器,执行语句,并返回结果
+io	             通过类加载器在jar包中寻找一个package下满足条件的所有类,解析资源  (已看完.只要处理配置文件的IO读取)
+jdbc	         生成JDBC能处理的语句
+lang             @UsesJava7和@UsesJava8
+logging	         日志相关
+mapping	         映射，将返回的结果集，映射到pojo的实体类上
+ognl	         OGNL
+parsing	         xml解析，${} 格式的字符串解析
+plugin	         插件
+reflection	     反射
+scripting	     脚本
+session	         核心，session相关
+transaction	     事务
+type	         类型处理器，实现java和jdbc中的类型之间转换
+
+
+
+

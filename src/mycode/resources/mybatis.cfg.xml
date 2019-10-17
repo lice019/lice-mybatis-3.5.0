@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+    <!-- 给全限定类名命个别名，减少xml实体类引用代码 -->
+    <typeAliases>
+        <!-- 方式一：给单个实体类名一个别名,在对应的xml中引用别名即可
+        <typeAlias alias="employeeEntity" type="com.xm.mybatis.entity.EmployeeEntity"></typeAlias>
+        -->
+
+        <!-- 方式二：当有多个实体类的时候,引用实体类包名,实体类别人首字母默认小写(如: employeeEntity)。如果实体类上有注解别名,以注解为准! -->
+        <package name="com.lice.pojo"/>
+    </typeAliases>
+
+    <environments default="development">
+        <environment id="development">
+            <!-- type="JDBC" 表示使用JDBC的提交和回滚管理事务 -->
+            <transactionManager type="JDBC"/>
+
+            <!-- mybatis提供了3种数据源类型，分别是：POOLED,UNPOOLED,JNDI -->
+            <!-- POOLED 表示支持JDBC数据源连接池 -->
+            <!-- UNPOOLED 表示不支持数据源连接池 -->
+            <!-- JNDI 表示支持外部数据源连接池 -->
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/dev_database"/>
+                <property name="username" value="root"/>
+                <property name="password" value="root"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--有四种方式引入mapper.xml-->
+    <mappers>
+        <mapper resource="com/lice/mapper/EmployeeMapper.xml"/>
+    </mappers>
+
+
+</configuration>

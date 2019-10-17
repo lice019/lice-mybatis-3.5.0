@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lice.mapper.EmployeeMapper">
+
+    <insert id="insertEmployee">
+		insert into tb_employee(emp_id,emp_name,emp_no,emp_birthday)
+		values(#{empId}, #{empName}, #{empNO}, #{empBirthday})
+	</insert>
+
+    <select id="getEmployeeById" parameterType="java.lang.String" resultType="employee">
+		select
+			emp_id as empId,
+			emp_name as empName,
+			emp_no as empNO,
+			emp_birthday as empBirthday
+		 from tb_employee where emp_id = #{empId}
+	</select>
+
+    <update id="updateEmployee">
+
+    </update>
+
+    <!--
+        foreach元素的属性主要有 item，index，collection，open，separator，close。
+        item表示集合中每一个元素进行迭代时的别名，
+        index指 定一个名字，用于表示在迭代过程中，每次迭代到的位置，
+        open表示该语句以什么开始，
+        separator表示在每次进行迭代之间以什么符号作为分隔 符，
+        close表示以什么结束。
+        collection
+            1. 如果传入的是单参数且参数类型是一个List的时候，collection属性值为list, parameterType="java.util.List"
+            2. 如果传入的是单参数且参数类型是一个array数组的时候，collection的属性值为array, parameterType="java.util.ArrayList"
+            3. 如果传入的参数是多个的时候，我们就需要把它们封装成一个Map了，当然单参数也可, parameterType="java.util.HashMap"
+     -->
+    <delete id="deleteEmployeeByIds" parameterType="java.util.ArrayList">
+        delete from tb_employee where 1=1
+        and emp_Id in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

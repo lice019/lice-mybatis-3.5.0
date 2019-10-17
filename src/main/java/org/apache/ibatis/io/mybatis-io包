@@ -1,0 +1,8 @@
+mybatis：IO包
+1、主要有两个类：
+    1、ClassLoaderWrapper：提供的ClassLoaderWrapper 是一个ClassLoader 的包装器，其中包含了多个ClassLoader 对象，通过调整多个类加载器的使用顺序，ClassLoaderWrapper 可以确保返回给系统使用的是正确的类加载器。
+    2、Resource：(从类路径下加载资源)读取配置文件资源流，返回一个InputStream输入流。
+2、mybatis在初始化加载配置文件时，先执行Resource类，再去执行ClassLoaderWrapper，通过相应的类加载器返回相应的输入流对象。
+    2.1：先执行org.apache.ibatis.io.Resources.getResourceAsStream(java.lang.ClassLoader, java.lang.String)方法。
+    2.2：再在上面中执行类加载包装类，返回相应的流对象。
+    2.3：最后返回一个读取到mybatis配置文件的输入流对象给SQLSessionFactoryBuild去构造session工厂
