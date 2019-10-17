@@ -2,32 +2,153 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+Mapper.xml中几个最流行的标签
+cache –给定名称空间的缓存配置。
+cache-ref –从另一个名称空间引用缓存配置。
+resultMap –最复杂，功能最强大的元素，它描述如何从数据库结果集中加载对象。
+parameterMap –已弃用！老式的参数映射方式。最好使用内联参数，以后可以删除此元素。此处未记录。
+sql –可重用的SQL块，可以由其他语句引用。
+insert –映射的INSERT语句。
+update –映射的UPDATE语句。
+delete –映射的DELETE语句。
+select –映射的SELECT语句。
+
+-->
+<!--mapper namespace:指定Mapper的接口，映射Mapper接口中的方法和XML文件的执行的id的SQL语句-->
 <mapper namespace="com.lice.mapper.EmployeeMapper">
+
+    <!--resultMap：用于pojo实体和数据库表中的列进行映射,特别是在查询时，返回结果集时可以自动映射结果到相应的实体中-->
+    <!--这样的一个 JavaBean 可以被映射到 ResultSet，就像映射到 HashMap 一样简单。-->
+    <!--id:该resultMap的唯一标识，给select、insert、update、delete标签引用-->
+    <!--type：数据库表中列名映射的pojo实体属性名称，可以使用别名机制，不使用别名机制则需要实体类的全限类名-->
+    <resultMap id="employeeMap" type="employee">
+        <!--表中唯一的id,即主键-->
+        <id column="emp_id" property="empId"/>
+        <!--表中其他列名和pojo实体属性名称映射-->
+        <!--非主键列：column：为表列名或列的别名；property：为pojo的属性名称-->
+        <result column="emp_name" property="empName"/>
+        <result column="emp_no" property="empNo"/>
+        <!--jdbcType:JDBC数据类型-->
+        <result column="emp_birthday" property="empBirthday" jdbcType="TIMESTAMP"/>
+        <result column="dep_no" property="depNo"/>
+        <!--图片处理大字段处理，BLOB：二进制-->
+        <!--        <result column="head_img" property="headImg" jdbcType="BLOB"/>-->
+    </resultMap>
+
+    <!-- select标签
+        <select
+                id="selectPerson"                与Mapper接口中的具体方法名称一致
+                parameterType="int"              参数类型，就是参数查询的数据类型
+                parameterMap="deprecated"        过时，参数Map
+                resultType="hashmap"             结果集类型，从该语句返回的预期类型的​​标准类名或别名。请注意，对于集合，这应该是集合包含的类型，而不是集合本身的类型。使用resultType或 resultMap，不能两者都使用。
+                resultMap="personResultMap"      对外部resultMap的命名引用。结果映射是MyBatis的最强大功能，并且对它们有很好的了解，可以解决许多困难的映射情况。使用resultMap或resultType，不能同时使用。
+                flushCache="false"               将此设置为true会在调用此语句时刷新本地和第二级缓存。默认值：对于select语句为false。
+                useCache="true"                  将其设置为true将导致该语句的结果被缓存在2级缓存中。默认值： 对于select语句为true。
+                timeout="10"                     这设置了驱动程序在引发异常之前等待数据库从请求返回的秒数。默认为未设置（取决于驱动程序）
+                fetchSize="256"                  这是一个驱动程序提示，将试图使驱动程序返回成批的行结果，这些行的大小等于此设置。默认为未设置（取决于驱动程序）
+                statementType="PREPARED"         任何一个STATEMENT，PREPARED或CALLABLE。这使MyBatis分别使用Statement， PreparedStatement或CallableStatement。默认值：PREPARED。
+                resultSetType="FORWARD_ONLY">    结果集类型
+        </select>
+    -->
+    <!--resultType:指sqL语句执行后返回的数据类型为employee实体类，该处使用了别名机制-->
+    <!--可以省略parameterType-->
+    <select id="getEmployeeById" resultType="employee">
+    		select
+    			emp_id as empId,
+    			emp_name as empName,
+    			emp_no as empNO,
+    			emp_birthday as empBirthday,
+    			dep_no as depNo
+    		 from tb_employee where emp_id = #{empId}
+    </select>
+    <select id="selectAll" resultMap="employeeMap">
+        select * from tb_employee;
+    </select>
+
+    <!--    使用resultMap-->
+    <!--可以忽略parameterType-->
+    <!--    <select id="getEmployeeById" parameterType="java.lang.Integer" resultMap="employeeMap">-->
+    <!--        select emp_id,emp_name,emp_no,emp_birthday from tb_employee where emp_id = #{empId}-->
+    <!--    </select>-->
 
     <insert id="insertEmployee">
 		insert into tb_employee(emp_id,emp_name,emp_no,emp_birthday)
 		values(#{empId}, #{empName}, #{empNO}, #{empBirthday})
 	</insert>
 
-    <select id="getEmployeeById" parameterType="java.lang.String" resultType="employee">
-		select
-			emp_id as empId,
-			emp_name as empName,
-			emp_no as empNO,
-			emp_birthday as empBirthday
-		 from tb_employee where emp_id = #{empId}
-	</select>
 
+    <!--insert标签：
+    <insert
+            id="insertAuthor"
+            parameterType="domain.blog.Author"
+            flushCache="true"
+            statementType="PREPARED"
+            keyProperty=""
+            keyColumn=""                        （仅插入和更新）使用生成的键设置表中的列名称。仅当键列不是表中的第一列时，才在某些数据库（如PostgreSQL）中需要这样做。如果需要多个生成的列，则可以是用逗号分隔的列名称列表。
+            useGeneratedKeys=""                 仅插入和更新）这告诉MyBatis使用JDBC getGeneratedKeys方法检索数据库内部生成的密钥（例如，RDBMS中的自动增量字段，例如MySQL或SQL Server）。默认值：false
+            timeout="20">
+    </insert>
+
+
+    注意：在insert时，一般会涉及新增记录，返回主键值，然后拿返回主键值做其他处理。
+          但前提是数据库表主键是自动增加的， auto-generated keys.
+     有种方式可以主键返回：
+     1、JDBC方式返回主键自增的值（只支持主键自增数据库）
+        <insert useGeneratedKeys="true" keyProperty="id"></insert>
+        useGenerateKeys设置为true后， MyBatis会使用JDBC的getGeneratedKeys方法来取出由数据库内部生成的主键。
+         获得主键值后将其赋值给keyProperty配置的id属性。当需要设置多个属性时，使用逗号隔开， 这种情况下通还需要设置keyColumn属性，
+         按顺序指定数据库的列，这里列的值会和keyProperty配置的属性一一对应。然后可直接操作实体属性获取即可
+
+    2、使用<selectKey>标签返回自增主键值（即适合主键自增的数据库，也适合主键不自增的数据库，如Oracle）
+       如果不支持自增主键， 而是使用序列得到一个值，然后将这个值赋给id，再将数据插入数据库。
+
+       <selectKey keyColumn="id" resultType="long" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+       </selectKey>
+
+       resultType:主键值返回的数据类型
+       keyColumn和keyProperty上面的useGeneratedKeys功能一样
+       keyColumn：表的id列名
+       keyProperty：与列对应的实体属性名
+       order：与使用的数据库有关，
+               mysql：在MySQL数据库中，order属性设置的值是AFTER，因为当前记录的主键值在insert语句执行成功后才能获取到。
+               Oracle：在Oracle数据库中，order的值要设置为BEFORE， 这是因为Oracle中需要先从序列获取值，然后将值作为主键插入到数据库中。
+
+       LAST_INSERT_ID()：该函数是获取mysql数据库最后插入的数据ID值
+
+       各大数据库使用获取主键返回值：
+       Oracle： SELECT SEQ_ID.nextval from dual
+       DB2 ： VALUES IDENTITY_VAL_LOCAL（）。
+       MYSQL ： SELECT LAST_INSERT_ID（）。
+       SQLSERVER ： SELECT SCOPE_IDENTITY（）。
+       CLOUDSCAPE ：VALUES IDENTITY_VAL_LOCAL（）。
+       DERBY ： VALUES IDENTITY_VAL_LOCAL（）。
+       HSQLDB ： CALL IDENTITY（）。
+       SYBASE ：SELECT@@ IDENTITY。
+       DB2_MF ： SELECT IDENTITY_VAL_LOCAL（） FROM SYSIBM.SYSDUMMY1。
+       INFORMIX ：select dbinfo（' sqlca.sqlerrd1'） from systables where tabid = 1。
+
+
+    -->
+    <!--update标签：
+    <update
+            id="updateAuthor"
+            parameterType="domain.blog.Author"
+            flushCache="true"
+            statementType="PREPARED"
+            timeout="20">
+    </update>
+    -->
     <update id="updateEmployee">
 
     </update>
-
     <!--
         foreach元素的属性主要有 item，index，collection，open，separator，close。
         item表示集合中每一个元素进行迭代时的别名，
         index指 定一个名字，用于表示在迭代过程中，每次迭代到的位置，
         open表示该语句以什么开始，
-        separator表示在每次进行迭代之间以什么符号作为分隔 符，
+        separator表示在每次进行迭代之间以什么符号作为分隔符，
         close表示以什么结束。
         collection
             1. 如果传入的是单参数且参数类型是一个List的时候，collection属性值为list, parameterType="java.util.List"
@@ -41,5 +162,15 @@
             #{item}
         </foreach>
     </delete>
+
+    <!--delete标签：
+    <delete
+            id="deleteAuthor"
+            parameterType="domain.blog.Author"
+            flushCache="true"
+            statementType="PREPARED"
+            timeout="20">
+    </delete>
+    -->
 
 </mapper>

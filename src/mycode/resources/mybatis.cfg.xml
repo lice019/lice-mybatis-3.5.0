@@ -5,7 +5,50 @@
 
 <configuration>
 
+    <settings>
+        <!--全局启用或禁用任何映射器中配置的所有缓存-->
+        <setting name="cacheEnabled" value="true"/>
+        <!--全局启用或禁用延迟加载。启用后，所有关系都会被延迟加载。可以通过使用fetchType属性将其替换为特定关系。-->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <!--允许或禁止从单个语句返回多个ResultSet（需要兼容的驱动程序）-->
+        <setting name="multipleResultSetsEnabled" value="true"/>
+        <!--使用列标签代替列名。-->
+        <setting name="useColumnLabel" value="true"/>
+        <!--允许对生成的键的JDBC支持。需要兼容的驱动程序。此设置强制将生成的密钥（如果设置为true）使用，因为某些驱动程序拒绝兼容但仍可以工作（例如Derby）。-->
+        <setting name="useGeneratedKeys" value="false"/>
+        <!--指定MyBatis是否以及如何自动将列映射到字段/属性。NONE禁用自动映射。PARTIAL将仅自动映射结果，而内部没有定义嵌套的结果映射。FULL将自动映射任何复杂性的结果映射（包含嵌套或其他形式）。-->
+        <setting name="autoMappingBehavior" value="PARTIAL"/>
+        <!--指定检测到自动映射目标的未知列（或未知属性类型）时的行为。-->
+        <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+        <!--配置默认执行程序。SIMPLE executor没什么特别的。REUSE执行程序重新使用准备好的语句。BATCH执行程序重用语句并批量更新。-->
+        <setting name="defaultExecutorType" value="SIMPLE"/>
+        <!--设置驱动程序等待数据库响应的秒数。-->
+        <setting name="defaultStatementTimeout" value="25"/>
+        <!--设置驱动程序提示以控制返回结果的获取大小。该参数值可以被查询设置覆盖。-->
+        <setting name="defaultFetchSize" value="100"/>
+        <!--允许在嵌套语句上使用RowBounds。如果允许，设置为false。-->
+        <setting name="safeRowBoundsEnabled" value="false"/>
+        <!--启用从经典数据库列名A_COLUMN到驼峰式经典Java属性名aColumn的自动映射。-->
+        <!--启用属性的驼峰命名规则-->
+        <setting name="mapUnderscoreToCamelCase" value="false"/>
+        <!--MyBatis使用本地缓存来防止循环引用并加快重复的嵌套查询。默认情况下（会话），将缓存会话期间执行的所有查询。如果localCacheScope = STATEMENT本地会话仅用于语句执行，则对同一SqlSession的两个不同调用之间不会共享任何数据。-->
+        <setting name="localCacheScope" value="SESSION"/>
+        <!--当没有为参数提供特定的JDBC类型时，为空值指定JDBC类型。一些驱动程序需要指定列JDBC类型，但其他驱动程序则可以使用NULL，VARCHAR或OTHER等通用值。-->
+        <setting name="jdbcTypeForNull" value="OTHER"/>
+        <!--指定哪些对象的方法触发延迟加载-->
+        <setting name="lazyLoadTriggerMethods"
+                 value="equals,clone,hashCode,toString"/>
+    </settings>
+
+
+    <!--Mybatis的别名机制：除了在这里使用，也可以在pojo实体类上使用-->
     <!-- 给全限定类名命个别名，减少xml实体类引用代码 -->
+
+    <!--Mybatis对java语言的内置的数据类型的别名：包括基本数据类型、对象类型，集合list和map等
+                      Aliases           MappedType
+    java八大基本数据类型：_int              int (基本数据类型前使用_,和对象类型数据类型区分开)
+                       int               Integer
+    -->
     <typeAliases>
         <!-- 方式一：给单个实体类名一个别名,在对应的xml中引用别名即可
         <typeAlias alias="employeeEntity" type="com.xm.mybatis.entity.EmployeeEntity"></typeAlias>
@@ -15,15 +58,21 @@
         <package name="com.lice.pojo"/>
     </typeAliases>
 
+    <!--mybatis使用的JDBC数据类型处理器-->
+    <!--开发人员可以继承来修改，然后在mybatis.cfg.xml中定义自己修改后的JDBC类型处理器-->
+    <!--    <typeHandlers>-->
+    <!--        <typeHandler handler="org.mybatis.example.ExampleTypeHandler"/>-->
+    <!--    </typeHandlers>-->
+
     <environments default="development">
         <environment id="development">
             <!-- type="JDBC" 表示使用JDBC的提交和回滚管理事务 -->
             <transactionManager type="JDBC"/>
 
             <!-- mybatis提供了3种数据源类型，分别是：POOLED,UNPOOLED,JNDI -->
-            <!-- POOLED 表示支持JDBC数据源连接池 -->
-            <!-- UNPOOLED 表示不支持数据源连接池 -->
-            <!-- JNDI 表示支持外部数据源连接池 -->
+            <!-- POOLED 表示支持JDBC数据源连接池 org.apache.ibatis.datasource.pooled.PooledDataSource-->
+            <!-- UNPOOLED 表示不支持数据源连接池 org.apache.ibatis.datasource.unpooled.UnpooledDataSource-->
+            <!-- JNDI 表示支持外部数据源连接池 org.apache.ibatis.datasource.jndi.JndiDataSourceFactory-->
             <dataSource type="POOLED">
                 <property name="driver" value="com.mysql.jdbc.Driver"/>
                 <property name="url" value="jdbc:mysql://localhost:3306/dev_database"/>
@@ -34,7 +83,15 @@
     </environments>
     <!--有四种方式引入mapper.xml-->
     <mappers>
+        <!--第一种：使用类路径的相对路径-->
         <mapper resource="com/lice/mapper/EmployeeMapper.xml"/>
+        <!--第二种：使用url完全限定的路径-->
+        <!--<mapper url="file：///var/mappers/AuthorMapper.xml"/>-->
+        <!--第三种：使用映射器接口类,即Mapper接口-->
+<!--        <mapper class="com.lice.mapper.EmployeeMapper"/>-->
+<!--        &lt;!&ndash;第四种：将程序包中的所有接口注册为映射程序&ndash;&gt;-->
+<!--        <package name="com.lice.mapper"/>-->
+
     </mappers>
 
 

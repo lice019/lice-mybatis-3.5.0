@@ -1,14 +1,17 @@
 package com.lice.pojo;
 
 
-import java.util.Date;
+import org.apache.ibatis.type.Alias;
 
+import java.util.Date;
+//@Alias("employee"):通过注解来进行别名
 public class Employee {
 
     private Integer empId;
     private String empName;
     private String empNo;
     private Date empBirthday;
+    private String depNo;
 
     public Integer getEmpId() {
         return empId;
@@ -42,6 +45,14 @@ public class Employee {
         this.empBirthday = empBirthday;
     }
 
+    public String getDepNo() {
+        return depNo;
+    }
+
+    public void setDepNo(String depNo) {
+        this.depNo = depNo;
+    }
+
     @Override
     public String toString() {
         return "Employee{" +
@@ -49,6 +60,7 @@ public class Employee {
                 ", empName='" + empName + '\'' +
                 ", empNo='" + empNo + '\'' +
                 ", empBirthday=" + empBirthday +
+                ", depNo='" + depNo + '\'' +
                 '}';
     }
 }

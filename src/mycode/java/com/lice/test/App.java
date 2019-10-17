@@ -7,7 +7,10 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
+import javax.swing.text.DateFormatter;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.util.List;
 
 /**
  * description: 测试mybatis接口 <br>
@@ -28,7 +31,7 @@ public class App {
         //获取mapper接口
         EmployeeMapper employeeMapper = sqlSession.getMapper(EmployeeMapper.class);
         //执行mapper接口
-        Employee employee = employeeMapper.getEmployeeById("1");
+        Employee employee = employeeMapper.getEmployeeById(1);
         System.out.println(employee);
 
     }
@@ -41,8 +44,12 @@ public class App {
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
         //通过工厂生产SQLSession回话对象
         SqlSession sqlSession = sqlSessionFactory.openSession();
-        Employee employee = sqlSession.selectOne("com.lice.mapper.EmployeeMapper.getEmployeeById", "1");
-        System.out.println(employee);
+//        Employee employee = sqlSession.selectOne("com.lice.mapper.EmployeeMapper.getEmployeeById", 1);
+        EmployeeMapper employeeMapper = sqlSession.getMapper(EmployeeMapper.class);
+        List<Employee> employees = employeeMapper.selectAll();
+        employees.forEach((item-> System.out.println(item)));
+//        System.out.println(employeeMapper);
+
     }
 
 
