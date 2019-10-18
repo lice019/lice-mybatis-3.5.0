@@ -173,4 +173,211 @@ select –映射的SELECT语句。
     </delete>
     -->
 
+
+    <!--==================================mybatis的动态SQL==========================-->
+
+    <!--
+    Mybatis 3之后，采用了强大的OGNL表达式Object-Graph Navigation Language）来组成SQL动态语句的标签
+    SQL在XML中支持的几种标签。
+    · if
+    · choose( when、 otherwise)
+    · trim( where、 set)
+    · foreach
+    · bind
+    -->
+
+
+    <!--===========  if标签 =================-->
+    <!--
+    if标签：
+    if标签通常用于where语句中，通过判断参数值来决定是否使用某个查询条件，
+    也经常用于update语句中是否更新某一个字段值，
+    还可以用于insert语句中判断是否插入某个字段值
+
+    -->
+    <!--
+    用法：假设根据用户输入的条件进行查询员工表信息，
+        1、当只输入员工名称时，根据员工名称进行模糊查询
+        2、当输入员工号时，根据员工号进行模糊查询
+        3、当同时输入员工名称和员工号时，用这两个条件进行查询
+    -->
+
+    <!--如果没有使用动态SQL时-->
+    <select id="selectByEmpNameOrEmpNo" resultType="com.lice.pojo.Employee">
+     select emp_id as empId,emp_name as empName,emp_no as empNo,emp_birthday as empBirthday
+     , dep_no as depNo from tb_employee
+     where emp_name like concat('%',#{empName},'%')
+     and emp_no = #{empNo}
+
+    </select>
+    <!--以上当同时输入empName和empNo是可以正确查询的，但是当只输入empName时，导致empNo==null，将null也作为查询条件了，导致查询错误-->
+    <!--使用if标签来解决这个问题-->
+    <select id="selectByEmpNameOrEmpNo1" resultType="com.lice.pojo.Employee">
+        select emp_id as empId,emp_name as empName,emp_no as empNo,emp_birthday as empBirthday
+        , dep_no as depNo
+        from tb_employee
+        where 1=1
+        <if test="empName != null and empName != ''">
+            and emp_name like concat('%',#{empName},'%')
+        </if>
+        <if test="empNo !=null and empNo !=''">
+            and emp_no = #{empNo}
+        </if>
+
+    </select>
+    <!--
+    if标签有一个必填的属性test，test的属性值是一个符合OGNL要求的判断表达式，表达式的结果可以是true或false，
+    除此之外所有的非0值都为true， 只有0为false。 建议只用true或false作为结果。
+
+    test中的属性值：
+    ·判断条件 property!=null或 property== null： 适用于任何类型的字段，用于判断属性值是否为空。
+    ·判断条件property!=''或property ==''：仅适用于String类型的字段，用于判断是否为空字符串。
+    · and 和 or： 当有多个判断条件时，使用and或or进行连接，嵌套的判断可以使用小括号分组，and相当于Java中的与（&&），or相当于Java中的或（ ||）。
+    上面两个条件的属性类型都是 String， 对字符串的判断和Java中的判断类似， 首先需要判断字段是否为null， 然后再去判断是否为空（在OGNL表达式中，这两个判断的顺序不会影响判断的结果，也不会有空指针异常）。
+
+    注意：where关键字后面的条件 1==1，
+    由于两个都是动态查询条件，如果没有默认的条件 1==1，一旦两个if判断都满足时，最后生成的SQL语句就是以where结束。
+    这样就不符合SQL的语法规范了，就会报错，加上1==1,可以避免SQL语句的异常。
+
+    但两个if不满足时：
+    select emp_id,emp_name,emp_no,emp_birthday,dep_no from tb_employee where;(SQL语法错误)
+
+    select emp_id,emp_name,emp_no,emp_birthday,dep_no from tb_employee where 1=1
+    加上（1==1）时，尽管两个条件都不满足时，语法不会出异常，还是符合SQL语法规范的
+    -->
+
+
+    <!--if标签用于update-->
+    <update id="updateEmployee">
+        update tb_employee
+        set
+        <if test="empName !=null and empName != ''">
+            emp_name = #{empName},
+        </if>
+        <if test="empNo !=null and empNo != ''">
+            emp_no = #{empNo},
+        </if>
+        <if test="empBirthday !=null">
+            emp_birthday = #{empBirthday,jdbcType=TIMESTAMP},
+        </if>
+        <if test="depNo !=null and depNo != ''">
+            dep_no = #{depNo},
+        </if>
+        emp_id = #{empId} <!--保证SQL语法的正确-->
+        where emp_id = #{empId}
+    </update>
+    <!--当全部条件都为null和""时
+    update tb_employee set emp_id = #{empId} where emp_id = #{empId}
+
+    如果没有 emp_id = #{empId}，尽管有一个条件满足的，也是SQL语法错误
+    update tb_employee set emp_name = #{empName} ,(这里多个逗号) where emp_id =${empId}
+    -->
+
+    <!--if标签用于insert-->
+    <insert id="insertEmployee" useGeneratedKeys="true" keyColumn="emp_id" keyProperty="empId">
+        insert into tb_employee(
+        <if test="empName != null and  empName !=''">
+            emp_name,
+        </if>
+        emp_no,emp_birthday,dep_no)
+        values(
+        <if test="empName !=null and empName!=''">
+            #{empName},
+        </if>
+        #{empNo},#{empBirthday},#{depNo}
+        )
+    </insert>
+    <!--
+    使用if标签中进行insert需要注意：
+    若在列的部分增加if条件，则values的部分也要增加相同的if条件，必须保证上下可以互相对应，完全匹配。
+    -->
+
+
+    <!--===========  choose标签 =================-->
+    <!--
+    上面使用了if标签，if标签作用是判断，if标签逻辑只有if判断，却没有if-else逻辑判断。
+    <choose>标签正式解决if标签没有if-else判断的，choose用于if-else判断和if-else-的.
+    <choose>标签内嵌<when>和<otherwise>标签。
+    choose 元素中包含when和otherwise两个标签，一个choose中至少有一个when，有0个或者1个otherwise。
+    -->
+    <select id="selectChoose" resultType="com.lice.pojo.Employee">
+        select emp_id,emp_name,emp_no,emp_birthday,dep_no
+        from tb_employee
+        where 1==1
+        <choose>
+            <when test="empId !=null and empId!=''">
+                and emp_id =#{empId},
+            </when>
+            <when test="empName !=null and empName !=''">
+                and emp_name =#{empName}
+            </when>
+            <otherwise>
+                1==2
+            </otherwise>
+        </choose>
+        <!--如果满足第一个when，就是用第一个when作为查询条件；如果不满足继续往下判断第二个when；都不满足，则使用
+            otherwise标签中条件
+        -->
+    </select>
+
+
+    <!--===========  where、set、trim标签 =================-->
+
+    <!--where标签-->
+    <!--
+    where标签：解决了上面where关键字后面使用if标签时需要添加 1==1的条件来确保SQL语法正确
+    where标签的作用： 如果该标签包含的元素中有返回值，就插入一个where；如果where后面的字符串是以AND和OR开头的， 就将它们剔除。
+    -->
+    <select id="selectWhere" resultType="com.lice.pojo.Employee">
+        select emp_id,emp_name,emp_no,emp_birthday,dep_no
+        from tb_employee
+        <where>
+            <if test="empName !=null and empName!=''">
+                and emp_name = #{empName},
+            </if>
+            <if test="empId !=null and empId!=''">
+                and emp_id = #{empId},
+            </if>
+        </where>
+        <!--
+        当if标签中都不满足时，SQL语句中没有where关键字；
+        如果一个if满足，则去掉开头的and关键字。
+        如果两个都满足，则去掉第一个if中的and
+        -->
+    </select>
+
+
+    <!--set标签-->
+    <!--
+    set标签作用是：解决update语句的set关键字
+    -->
+    <update id="updateSet">
+        update tb_employee
+        <set>
+            <if test="empName !=null and empName != ''">
+                emp_name = #{empName},
+            </if>
+            <if test="empNo !=null and empNo != ''">
+                emp_no = #{empNo},
+            </if>
+            <if test="empBirthday !=null">
+                emp_birthday = #{empBirthday,jdbcType=TIMESTAMP},
+            </if>
+            <if test="depNo !=null and depNo != ''">
+                dep_no = #{depNo},
+            </if>
+            emp_id =#{empId}
+        </set>
+        where emp_id = #{empId}
+    </update>
+
+
+
+    <!--===========  foreach标签 =================-->
+
+
+
+
+
+
 </mapper>
